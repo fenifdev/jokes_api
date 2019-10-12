@@ -115,6 +115,26 @@ func TestEndpointGetJokesById(t *testing.T) {
     }
 }
 
+func TestEndpointGetJokesByIdEmpty(t *testing.T) {
+    req, _ := http.NewRequest("GET", "/api/jokes/200", nil)
+    response := executeRequest(req)
+
+    //expect a 200 status
+    if response.Result().StatusCode != http.StatusOK {
+        t.Errorf("Expected an %d status received a %d", http.StatusOK, response.Result().StatusCode)
+    }
+
+    //Expect a json type response.
+    if content_type := response.Result().Header.Get("Content-Type"); content_type != "application/json" {
+        t.Errorf("Expected a content type application/json. Got %s", content_type)
+    }
+
+    //Expect an empty array.
+    if body := response.Body.String(); body != "{}" {
+        t.Errorf("Expected an empty object. Got %s", body)
+    }
+}
+
 func TestEndpointPostJokes(t *testing.T) {
     req, _ := http.NewRequest("POST", "/api/jokes", nil)
     response := executeRequest(req)
