@@ -31,7 +31,6 @@ func (s *server) getJokeByID(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(response)
 		}
-
 	} else {
 		payload := joke
 		response, _ := json.Marshal(payload)
@@ -46,5 +45,20 @@ func (s *server) postJokes(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) deleteJokeByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	var joke Joke
 
+	if err := s.db.First(&joke, vars["id"]).Error; err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			response, _ := json.Marshal(err)
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(response)
+		}
+	} else {
+		s.db.Delete(&joke)
+		payload := joke
+		response, _ := json.Marshal(payload)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(response)
+	}
 }

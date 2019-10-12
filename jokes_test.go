@@ -144,12 +144,50 @@ func TestEndpointPostJokes(t *testing.T) {
     }
 }
 
+func TestEndpointDeleteJokesByIdEmpty(t *testing.T) {
+    req, _ := http.NewRequest("DELETE", "/api/jokes/200", nil)
+    response := executeRequest(req)
+
+    //Expect a 200 status
+    if response.Result().StatusCode != http.StatusOK {
+        t.Errorf("Expected an %d status received a %d", http.StatusOK, response.Result().StatusCode)
+    }
+
+    //Expect a json type response.
+    if content_type := response.Result().Header.Get("Content-Type"); content_type != "application/json" {
+        t.Errorf("Expected a content type application/json. Got %s", content_type)
+    }
+
+    //Expect an empty object.
+    if body := response.Body.String(); body != "{}" {
+        t.Errorf("Expected an empty object. Got %s", body)
+    }
+}
+
 func TestEndpointDeleteJokesById(t *testing.T) {
+    // Create jokes
+    var body Joke
+    joke := &Joke{ Text: "lala" }
+    testServer.db.Create(joke)
+
     req, _ := http.NewRequest("DELETE", "/api/jokes/1", nil)
     response := executeRequest(req)
 
+    //Expect a 200 status
     if response.Result().StatusCode != http.StatusOK {
         t.Errorf("Expected an %d status received a %d", http.StatusOK, response.Result().StatusCode)
+    }
+
+    //Expect a json type response.
+    if content_type := response.Result().Header.Get("Content-Type"); content_type != "application/json" {
+        t.Errorf("Expected a content type application/json. Got %s", content_type)
+    }
+
+    //Expect an object with the result
+    json.NewDecoder(response.Body).Decode(&body)
+
+    if body.Text != joke.Text {
+        t.Errorf("Expected %s . Got %s", joke.Text, body.Text)
     }
 }
 
