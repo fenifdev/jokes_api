@@ -9,6 +9,7 @@ import (
     "github.com/jinzhu/gorm"
     _ "github.com/jinzhu/gorm/dialects/sqlite"
     "encoding/json"
+    "bytes"
 )
 
 var testServer *server
@@ -135,14 +136,54 @@ func TestEndpointGetJokesByIdEmpty(t *testing.T) {
     }
 }
 
-func TestEndpointPostJokes(t *testing.T) {
+func TestEndpointPostJokesEmpty(t *testing.T) {
     req, _ := http.NewRequest("POST", "/api/jokes", nil)
     response := executeRequest(req)
 
+    //expect a 200 status
     if response.Result().StatusCode != http.StatusOK {
         t.Errorf("Expected an %d status received a %d", http.StatusOK, response.Result().StatusCode)
     }
+
+    //Expect a json type response.
+    if content_type := response.Result().Header.Get("Content-Type"); content_type != "application/json" {
+        t.Errorf("Expected a content type application/json. Got %s", content_type)
+    }
+
+    //Expect an error message.
+    if body := response.Body.String(); body != "{\"error\":\"text is required\"}" {
+        t.Errorf("Expected a text is required. Got %s", body)
+    }
 }
+
+func TestEndpointPostJokes(t *testing.T) {
+    var body Joke
+    payload := []byte(`{"text": "lala"}`)
+
+    req, _ := http.NewRequest("POST", "/api/jokes", bytes.NewBuffer(payload))
+    response := executeRequest(req)
+
+    //expect a 200 status
+    if response.Result().StatusCode != http.StatusOK {
+        t.Errorf("Expected an %d status received a %d", http.StatusOK, response.Result().StatusCode)
+    }
+
+    //Expect a json type response.
+    if content_type := response.Result().Header.Get("Content-Type"); content_type != "application/json" {
+        t.Errorf("Expected a content type application/json. Got %s", content_type)
+    }
+
+    //Expect an object with the result
+    json.NewDecoder(response.Body).Decode(&body)
+
+    var dat map[string]interface{}
+    json.Unmarshal(payload, &dat)
+
+    if body.Text != dat["text"] {
+        t.Errorf("Expected %s . Got %s", dat["text"], body.Text)
+    }
+}
+
 
 func TestEndpointDeleteJokesByIdEmpty(t *testing.T) {
     req, _ := http.NewRequest("DELETE", "/api/jokes/200", nil)
