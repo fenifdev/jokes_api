@@ -4,6 +4,7 @@ import(
 	"net/http"
 	"github.com/jinzhu/gorm"
 	"encoding/json"
+	"github.com/gorilla/mux"
 )
 
 type Joke struct {
@@ -21,7 +22,13 @@ func (s *server) getJokes(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) getJokeByID(w http.ResponseWriter, r *http.Request) {
-
+	vars := mux.Vars(r)
+	var joke Joke
+	s.db.First(&joke, vars["id"])
+	payload := joke
+	response, _ := json.Marshal(payload)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
 }
 
 func (s *server) postJokes(w http.ResponseWriter, r *http.Request) {

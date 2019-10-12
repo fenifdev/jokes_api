@@ -89,11 +89,29 @@ func TestEndpointGetJokesWithResults(t *testing.T) {
 }
 
 func TestEndpointGetJokesById(t *testing.T) {
-    req, _ := http.NewRequest("GET", "/api/jokes/1", nil)
+    // Create jokes
+    var body Joke
+    joke := &Joke{ Text: "lala" }
+    testServer.db.Create(joke)
+
+    req, _ := http.NewRequest("GET", "/api/jokes/2", nil)
     response := executeRequest(req)
 
+    //expect a 200 status
     if response.Result().StatusCode != http.StatusOK {
         t.Errorf("Expected an %d status received a %d", http.StatusOK, response.Result().StatusCode)
+    }
+
+    //Expect a json type response.
+    if content_type := response.Result().Header.Get("Content-Type"); content_type != "application/json" {
+        t.Errorf("Expected a content type application/json. Got %s", content_type)
+    }
+
+    //Expect an object with the result
+    json.NewDecoder(response.Body).Decode(&body)
+
+    if body.Text != joke.Text {
+        t.Errorf("Expected %s . Got %s", joke.Text, body.Text)
     }
 }
 
